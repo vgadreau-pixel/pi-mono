@@ -344,6 +344,8 @@ export class Theme {
 	private fgColors: Map<ThemeColor, string>;
 	private bgColors: Map<ThemeBg, string>;
 	private mode: ColorMode;
+	// Optional background override function (can be set by extensions for transparency, etc.)
+	private static bgOverrideFn?: (color: ThemeBg, text: string, defaultBg: (text: string) => string) => string;
 
 	constructor(
 		fgColors: Record<ThemeColor, string | number>,
@@ -370,7 +372,40 @@ export class Theme {
 		return `${ansi}${text}\x1b[39m`; // Reset only foreground color
 	}
 
+	/**
+	 * Set a background override function.
+	 * This allows extensions to customize background rendering (e.g., for transparency).
+	 * The function receives the color name, text, and default background function.
+	 * Return undefined to use the default background.
+	 */
+	static setBackgroundOverride(fn: (color: ThemeBg, text: string, defaultBg: (text: string) => string) => string | undefined): void {
+		Theme.bgOverrideFn = fn;
+	}
+
+	/**
+	 * Get the default background ANSI code for a color (without applying it).
+	 */
+	getDefaultBgAnsi(color: ThemeBg): string {
+		const ansi = this.bgColors.get(color);
+		if (!ansi) throw new Error(`Unknown theme background color: ${color}`);
+		return ansi;
+	}
+
 	bg(color: ThemeBg, text: string): string {
+		// Check for override function (set by extensions)
+		if (Theme.bgOverrideFn) {
+			const defaultBg = (t: string) => {
+				const ansi = this.bgColors.get(color);
+				if (!ansi) throw new Error(`Unknown theme background color: ${color}`);
+				return `${ansi}${t}\x1b[49m`;
+			};
+			const overridden = Theme.bgOverrideFn(color, text, defaultBg);
+			if (overridden !== undefined) {
+				return overridden;
+			}
+		}
+		
+		// Default behavior
 		const ansi = this.bgColors.get(color);
 		if (!ansi) throw new Error(`Unknown theme background color: ${color}`);
 		return `${ansi}${text}\x1b[49m`; // Reset only background color
