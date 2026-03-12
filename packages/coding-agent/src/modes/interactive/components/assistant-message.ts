@@ -69,6 +69,8 @@ export class AssistantMessageComponent extends Container {
 					.slice(i + 1)
 					.some((c) => (c.type === "text" && c.text.trim()) || (c.type === "thinking" && c.thinking.trim()));
 
+				const minimalMode = process.env.PI_MINIMAL_TOOLS === "1";
+
 				if (this.hideThinkingBlock) {
 					// Show static "Thinking..." label when hidden
 					this.contentContainer.addChild(new Text(theme.italic(theme.fg("thinkingText", "Thinking...")), 1, 0));
@@ -76,13 +78,21 @@ export class AssistantMessageComponent extends Container {
 						this.contentContainer.addChild(new Spacer(1));
 					}
 				} else {
-					// Thinking traces in thinkingText color, italic
-					this.contentContainer.addChild(
-						new Markdown(content.thinking.trim(), 1, 0, this.markdownTheme, {
-							color: (text: string) => theme.fg("thinkingText", text),
-							italic: true,
-						}),
-					);
+					// In minimal mode, use subtle thinking indicator
+					if (minimalMode) {
+						// Claude Code style: subtle "Thinking" label with minimal styling
+						this.contentContainer.addChild(new Text(theme.fg("thinkingText", "⋮ Thinking"), 1, 0));
+						// Add thinking content with minimal styling
+						this.contentContainer.addChild(new Text(theme.fg("dim", content.thinking.trim()), 2, 0));
+					} else {
+						// Thinking traces in thinkingText color, italic
+						this.contentContainer.addChild(
+							new Markdown(content.thinking.trim(), 1, 0, this.markdownTheme, {
+								color: (text: string) => theme.fg("thinkingText", text),
+								italic: true,
+							}),
+						);
+					}
 					if (hasVisibleContentAfter) {
 						this.contentContainer.addChild(new Spacer(1));
 					}

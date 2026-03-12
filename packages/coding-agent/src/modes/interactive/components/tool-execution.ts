@@ -374,8 +374,8 @@ export class ToolExecutionComponent extends Container {
 	}
 
 	private updateDisplay(): void {
-		// Check for minimal/transparent mode via Theme.setBackgroundOverride or env var
-		// PI_MINIMAL_TOOLS=1 enables minimal tool rendering (borders only, no background fill)
+		// Check for minimal/transparent mode (Claude Code style)
+		// PI_MINIMAL_TOOLS=1 enables minimal tool rendering
 		const minimalMode = process.env.PI_MINIMAL_TOOLS === "1";
 
 		// Set background based on state
@@ -522,21 +522,26 @@ export class ToolExecutionComponent extends Container {
 		const commandDisplay =
 			command === null ? theme.fg("error", "[invalid arg]") : command ? command : theme.fg("toolOutput", "...");
 
-		// In minimal mode, use subtle prefix instead of bold title
+		// In minimal mode (Claude Code style), use clean simple format
 		if (minimalMode) {
-			const prefix = this.isPartial
-				? theme.fg("warning", "◌")
+			// Claude Code style: simple icon + tool name + content
+			const statusIcon = this.isPartial
+				? theme.fg("warning", "⋮")
 				: this.result?.isError
-					? theme.fg("error", "✗")
+					? theme.fg("error", "×")
 					: theme.fg("success", "✓");
+
+			// Tool header line
 			this.contentBox.addChild(
 				new Text(
-					`${prefix} ${theme.fg("toolTitle", `bash`)} ${theme.fg("dim", command ? command.slice(0, 60) : "...")}` +
-						timeoutSuffix,
+					`${statusIcon} ${theme.fg("toolTitle", "bash")} ${theme.fg("dim", command ? command : "...")}${timeoutSuffix}`,
 					0,
 					0,
 				),
 			);
+
+			// Subtle separator
+			this.contentBox.addChild(new Text(theme.fg("borderMuted", "  ─".repeat(30)), 0, 0));
 		} else {
 			this.contentBox.addChild(
 				new Text(theme.fg("toolTitle", theme.bold(`$ ${commandDisplay}`)) + timeoutSuffix, 0, 0),
