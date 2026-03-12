@@ -374,12 +374,19 @@ export class ToolExecutionComponent extends Container {
 	}
 
 	private updateDisplay(): void {
+		// Check for minimal/transparent mode via Theme.setBackgroundOverride or env var
+		// PI_MINIMAL_TOOLS=1 enables minimal tool rendering (borders only, no background fill)
+		const minimalMode = process.env.PI_MINIMAL_TOOLS === "1";
+
 		// Set background based on state
-		const bgFn = this.isPartial
-			? (text: string) => theme.bg("toolPendingBg", text)
-			: this.result?.isError
-				? (text: string) => theme.bg("toolErrorBg", text)
-				: (text: string) => theme.bg("toolSuccessBg", text);
+		// In minimal mode, use no background (transparent)
+		const bgFn = minimalMode
+			? (text: string) => text // No background - transparent
+			: this.isPartial
+				? (text: string) => theme.bg("toolPendingBg", text)
+				: this.result?.isError
+					? (text: string) => theme.bg("toolErrorBg", text)
+					: (text: string) => theme.bg("toolSuccessBg", text);
 
 		const useBuiltInRenderer = this.shouldUseBuiltInRenderer();
 		let customRendererHasContent = false;
@@ -508,17 +515,37 @@ export class ToolExecutionComponent extends Container {
 	private renderBashContent(): void {
 		const command = str(this.args?.command);
 		const timeout = this.args?.timeout as number | undefined;
+		const minimalMode = process.env.PI_MINIMAL_TOOLS === "1";
 
 		// Header
 		const timeoutSuffix = timeout ? theme.fg("muted", ` (timeout ${timeout}s)`) : "";
 		const commandDisplay =
 			command === null ? theme.fg("error", "[invalid arg]") : command ? command : theme.fg("toolOutput", "...");
-		this.contentBox.addChild(
-			new Text(theme.fg("toolTitle", theme.bold(`$ ${commandDisplay}`)) + timeoutSuffix, 0, 0),
-		);
+
+		// In minimal mode, use subtle prefix instead of bold title
+		if (minimalMode) {
+			const prefix = this.isPartial
+				? theme.fg("warning", "◌")
+				: this.result?.isError
+					? theme.fg("error", "✗")
+					: theme.fg("success", "✓");
+			this.contentBox.addChild(
+				new Text(
+					`${prefix} ${theme.fg("toolTitle", `bash`)} ${theme.fg("dim", command ? command.slice(0, 60) : "...")}` +
+						timeoutSuffix,
+					0,
+					0,
+				),
+			);
+		} else {
+			this.contentBox.addChild(
+				new Text(theme.fg("toolTitle", theme.bold(`$ ${commandDisplay}`)) + timeoutSuffix, 0, 0),
+			);
+		}
 
 		if (this.result) {
 			const output = this.getTextOutput().trim();
+			const minimalMode = process.env.PI_MINIMAL_TOOLS === "1";
 
 			if (output) {
 				// Style each line for the output
@@ -529,6 +556,10 @@ export class ToolExecutionComponent extends Container {
 
 				if (this.expanded) {
 					// Show all lines when expanded
+					if (minimalMode) {
+						// Minimal mode: subtle separator line
+						this.contentBox.addChild(new Text(theme.fg("borderMuted", "  ─".repeat(20)), 0, 0));
+					}
 					this.contentBox.addChild(new Text(`\n${styledOutput}`, 0, 0));
 				} else {
 					// Use visual line truncation when collapsed with width-aware caching
