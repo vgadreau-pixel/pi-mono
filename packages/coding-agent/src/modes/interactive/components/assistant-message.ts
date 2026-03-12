@@ -78,12 +78,14 @@ export class AssistantMessageComponent extends Container {
 						this.contentContainer.addChild(new Spacer(1));
 					}
 				} else {
-					// In minimal mode, use subtle thinking indicator
+					// In minimal mode, use higher contrast thinking indicator
 					if (minimalMode) {
-						// Claude Code style: subtle "Thinking" label with minimal styling
-						this.contentContainer.addChild(new Text(theme.fg("thinkingText", "⋮ Thinking"), 1, 0));
-						// Add thinking content with minimal styling
-						this.contentContainer.addChild(new Text(theme.fg("dim", content.thinking.trim()), 2, 0));
+						// Claude Code style: "Thinking" label with higher contrast + italic
+						this.contentContainer.addChild(new Text(theme.italic(theme.fg("accent", "⋮ Thinking")), 1, 0));
+						// Add thinking content with higher contrast (not dim) + italic
+						this.contentContainer.addChild(
+							new Text(theme.italic(theme.fg("thinkingText", content.thinking.trim())), 2, 0),
+						);
 					} else {
 						// Thinking traces in thinkingText color, italic
 						this.contentContainer.addChild(
