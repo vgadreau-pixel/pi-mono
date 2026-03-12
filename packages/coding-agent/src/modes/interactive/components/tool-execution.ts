@@ -553,17 +553,20 @@ export class ToolExecutionComponent extends Container {
 			const minimalMode = process.env.PI_MINIMAL_TOOLS === "1";
 
 			if (output) {
+				// Apply syntax highlighting for code-like output
+				const lang = getLanguageFromPath(str(this.args?.command) || "");
+				const highlightedLines = lang ? highlightCode(output, lang) : output.split("\n");
+
 				// Style each line for the output
-				const styledOutput = output
-					.split("\n")
-					.map((line) => theme.fg("toolOutput", line))
+				const styledOutput = highlightedLines
+					.map((line) => (minimalMode ? line : theme.fg("toolOutput", line)))
 					.join("\n");
 
 				if (this.expanded) {
 					// Show all lines when expanded
 					if (minimalMode) {
 						// Minimal mode: subtle separator line
-						this.contentBox.addChild(new Text(theme.fg("borderMuted", "  ─".repeat(20)), 0, 0));
+						this.contentBox.addChild(new Text(theme.fg("borderMuted", "  ─".repeat(30)), 0, 0));
 					}
 					this.contentBox.addChild(new Text(`\n${styledOutput}`, 0, 0));
 				} else {
@@ -670,6 +673,7 @@ export class ToolExecutionComponent extends Container {
 				const output = this.getTextOutput();
 				const rawPath = str(this.args?.file_path ?? this.args?.path);
 				const lang = rawPath ? getLanguageFromPath(rawPath) : undefined;
+				const minimalMode = process.env.PI_MINIMAL_TOOLS === "1";
 				const lines = lang ? highlightCode(replaceTabs(output), lang) : output.split("\n");
 
 				const maxLines = this.expanded ? lines.length : 10;
@@ -679,7 +683,9 @@ export class ToolExecutionComponent extends Container {
 				text +=
 					"\n\n" +
 					displayLines
-						.map((line: string) => (lang ? replaceTabs(line) : theme.fg("toolOutput", replaceTabs(line))))
+						.map((line: string) =>
+							lang || minimalMode ? replaceTabs(line) : theme.fg("toolOutput", replaceTabs(line)),
+						)
 						.join("\n");
 				if (remaining > 0) {
 					text += `${theme.fg("muted", `\n... (${remaining} more lines,`)} ${keyHint("expandTools", "to expand")})`;
