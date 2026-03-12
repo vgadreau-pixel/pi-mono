@@ -345,7 +345,11 @@ export class Theme {
 	private bgColors: Map<ThemeBg, string>;
 	private mode: ColorMode;
 	// Optional background override function (can be set by extensions for transparency, etc.)
-	private static bgOverrideFn?: (color: ThemeBg, text: string, defaultBg: (text: string) => string) => string;
+	private static bgOverrideFn?: (
+		color: ThemeBg,
+		text: string,
+		defaultBg: (text: string) => string,
+	) => string | undefined;
 
 	constructor(
 		fgColors: Record<ThemeColor, string | number>,
@@ -378,7 +382,9 @@ export class Theme {
 	 * The function receives the color name, text, and default background function.
 	 * Return undefined to use the default background.
 	 */
-	static setBackgroundOverride(fn: (color: ThemeBg, text: string, defaultBg: (text: string) => string) => string | undefined): void {
+	static setBackgroundOverride(
+		fn: (color: ThemeBg, text: string, defaultBg: (text: string) => string) => string | undefined,
+	): void {
 		Theme.bgOverrideFn = fn;
 	}
 
@@ -404,7 +410,7 @@ export class Theme {
 				return overridden;
 			}
 		}
-		
+
 		// Default behavior
 		const ansi = this.bgColors.get(color);
 		if (!ansi) throw new Error(`Unknown theme background color: ${color}`);

@@ -12,12 +12,12 @@
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { theme } from "@mariozechner/pi-coding-agent";
+import { Theme } from "@mariozechner/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {
   // Enable transparent mode for tool blocks
   // This makes tool backgrounds transparent so terminal background images show through
-  theme.setBackgroundOverride((color, text, defaultBg) => {
+  Theme.setBackgroundOverride((color, text, defaultBg) => {
     // Only override tool block backgrounds
     const toolBgColors = ["toolPendingBg", "toolSuccessBg", "toolErrorBg"];
     
@@ -39,7 +39,7 @@ export default function (pi: ExtensionAPI) {
       transparent = !transparent;
       
       if (transparent) {
-        theme.setBackgroundOverride((color, text, defaultBg) => {
+        Theme.setBackgroundOverride((color, text, defaultBg) => {
           if (["toolPendingBg", "toolSuccessBg", "toolErrorBg"].includes(color)) {
             return text;
           }
@@ -47,7 +47,7 @@ export default function (pi: ExtensionAPI) {
         });
         ctx.ui.notify("✓ Transparent tool blocks enabled", "success");
       } else {
-        theme.setBackgroundOverride(() => undefined);
+        Theme.setBackgroundOverride(() => undefined);
         ctx.ui.notify("Default tool blocks enabled", "info");
       }
     },
