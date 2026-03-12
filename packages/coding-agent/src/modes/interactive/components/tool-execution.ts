@@ -540,8 +540,11 @@ export class ToolExecutionComponent extends Container {
 				),
 			);
 
-			// Subtle separator
-			this.contentBox.addChild(new Text(theme.fg("borderMuted", "  ─".repeat(30)), 0, 0));
+			// Subtle separator - centered, fixed width with solid line
+			const separatorWidth = 40; // Fixed width for separator
+			const separator = "─".repeat(separatorWidth);
+			const padding = " ".repeat(5); // Left/right padding for centering effect
+			this.contentBox.addChild(new Text(padding + theme.fg("borderMuted", separator) + padding, 0, 0));
 		} else {
 			this.contentBox.addChild(
 				new Text(theme.fg("toolTitle", theme.bold(`$ ${commandDisplay}`)) + timeoutSuffix, 0, 0),
@@ -565,8 +568,11 @@ export class ToolExecutionComponent extends Container {
 				if (this.expanded) {
 					// Show all lines when expanded
 					if (minimalMode) {
-						// Minimal mode: subtle separator line
-						this.contentBox.addChild(new Text(theme.fg("borderMuted", "  ─".repeat(30)), 0, 0));
+						// Minimal mode: centered separator line, fixed width
+						const separatorWidth = 40; // Fixed width
+						const separator = "─".repeat(separatorWidth);
+						const padding = " ".repeat(5); // Padding on each side
+						this.contentBox.addChild(new Text(padding + theme.fg("borderMuted", separator) + padding, 0, 0));
 					}
 					this.contentBox.addChild(new Text(`\n${styledOutput}`, 0, 0));
 				} else {
